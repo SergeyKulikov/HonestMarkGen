@@ -15,6 +15,7 @@ import net.logistinweb.liw3.barcode.HonestSignDecoder
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.charset.StandardCharsets.UTF_8
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -25,6 +26,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val dateformat = SimpleDateFormat("HHmmss", Locale.getDefault())
+        var mark: String = ""
+        val markList = StringBuilder()
 
         val gtins: TextView = findViewById(R.id.ed_gtins)
         val result: TextView = findViewById(R.id.ed_marks)
@@ -50,7 +53,7 @@ class MainActivity : AppCompatActivity() {
                 val ac = genLine(41)
                 Log.d("LN", "sn: $sn")
 
-                val mark = // HonestSignDecoder.data_separator+
+                mark = // HonestSignDecoder.data_separator+
                     "01" + gtin1 +
                             "21" + sn +
                             HonestSignDecoder.data_separator +
@@ -58,6 +61,8 @@ class MainActivity : AppCompatActivity() {
                             HonestSignDecoder.data_separator + "92" + ac
 
                 res += mark + "\n"
+
+                markList.append(res)
 
                 if (!HonestSignDecoder().isHonestSight(mark)) {
                     Log.e("ERR", "это не марка!")
@@ -80,6 +85,7 @@ class MainActivity : AppCompatActivity() {
             // val bm: Bitmap = imageView.getDrawingCache()
             val bmp = imageView.drawToBitmap()
             saveImage(this, bmp, "mark_"+gtins.text+"_"+ dateformat.format(System.currentTimeMillis()))
+            saveFile(this, markList.toString())
         }
     }
 
@@ -100,9 +106,32 @@ class MainActivity : AppCompatActivity() {
         var outputStream: FileOutputStream? = null
 
         try {
-            outputStream = FileOutputStream(file)
+            outputStream = FileOutputStream(file, true)
 
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            outputStream.flush()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                outputStream!!.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun saveFile(context: Context, mark: String) {
+        val contextWrapper = ContextWrapper(context)
+        val directory: File =
+            contextWrapper.getDir("customDirectory", Context.MODE_PRIVATE)
+        val file = File(directory, "mark_list.txt")
+
+        var outputStream: FileOutputStream? = null
+
+        try {
+            outputStream = FileOutputStream(file)
+            outputStream.write(mark.toByteArray(UTF_8))
             outputStream.flush()
         } catch (e: IOException) {
             e.printStackTrace()
