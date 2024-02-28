@@ -12,13 +12,20 @@
         android:id="@+id/textField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
         android:hint="список GTIN">
 
-        <com.google.android.material.textfield.TextInputEditText
+        <!-- com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_gtins"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            />
+            /-->
+
+        <AutoCompleteTextView
+            android:id="@+id/ed_gtins"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
 
     </com.google.android.material.textfield.TextInputLayout>
 

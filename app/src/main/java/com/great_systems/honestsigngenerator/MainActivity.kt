@@ -1,13 +1,13 @@
 package com.great_systems.honestsigngenerator
 
+
 import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.Log
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.drawToBitmap
 import com.squareup.picasso.Picasso
@@ -18,9 +18,13 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets.UTF_8
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.HashSet
 
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var gtins: AutoCompleteTextView
+    private var gtinList: HashSet<String> = hashSetOf()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -29,15 +33,19 @@ class MainActivity : AppCompatActivity() {
         var mark: String = ""
         val markList = StringBuilder()
 
-        val gtins: TextView = findViewById(R.id.ed_gtins)
+        //val gtins: TextView = findViewById(R.id.ed_gtins)
+        gtins = findViewById(R.id.ed_gtins)
         val result: TextView = findViewById(R.id.ed_marks)
         val button: Button = findViewById(R.id.btn_gen)
         val save: Button = findViewById(R.id.btn_save)
         val imageView: ImageView = findViewById(R.id.iv_mark)
 
-        gtins.text = "9780201379624"
+        gtins.setText("9780201379624")
         val url1 = "https://barcode.tec-it.com/barcode.ashx?data="
         val url2 = "&code=GS1DataMatrix&translate-esc=on&dmsize=Default"
+
+        setAdapter()
+        loadGtins()
 
         button.setOnClickListener {
             val gtin_list = gtins.text.toString().split(',', ' ')
@@ -78,6 +86,7 @@ class MainActivity : AppCompatActivity() {
 
             }
             result.text = res
+            saveGtins()
         }
 
         save.setOnClickListener {
@@ -86,6 +95,7 @@ class MainActivity : AppCompatActivity() {
             val bmp = imageView.drawToBitmap()
             saveImage(this, bmp, "mark_"+gtins.text+"_"+ dateformat.format(System.currentTimeMillis()))
             saveFile(this, markList.toString())
+
         }
     }
 
@@ -142,6 +152,37 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
         }
+    }
+
+    private lateinit var adapter: ArrayAdapter<String>
+    fun setAdapter() {
+        val type: Array<String> = gtinList.toTypedArray()
+
+        adapter = ArrayAdapter<String>(
+            this,
+            com.google.android.material.R.layout.support_simple_spinner_dropdown_item,
+            type
+        )
+
+        gtins.setAdapter(adapter)
+    }
+
+    fun loadGtins() {
+        val sp = PreferenceManager.getDefaultSharedPreferences(this)
+        sp.getStringSet("GTIN_LIST", setOf())?.let {
+            gtinList.addAll(it)
+        }
+
+        setAdapter()
+    }
+
+    fun saveGtins() {
+        val sp = PreferenceManager.getDefaultSharedPreferences(this)
+        gtinList.add(gtins.text.toString())
+
+        sp.edit().putStringSet("GTIN_LIST", gtinList).apply()
+
+        loadGtins()
     }
 
 
